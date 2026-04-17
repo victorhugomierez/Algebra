@@ -1,4 +1,4 @@
-# 🧩 LogicInterpreter - Multi-tool
+# 🧩 Logic-Interpreter - Multi-tool
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)
 ![Status](https://img.shields.io/badge/Status-Work%20in%20Progress-yellow)
