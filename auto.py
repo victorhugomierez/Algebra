@@ -1,5 +1,6 @@
 import re
 import itertools
+import unicodedata
 
 class LogicInterpreter:
     def __init__(self):
@@ -13,6 +14,16 @@ class LogicInterpreter:
             '=': ' == ',   # Para comparación
             'x': '*',      # Para multiplicación
         }
+
+    def normalizar_texto(self, texto):
+        """Convierte caracteres Unicode raros a su forma básica (ej: 𝐩 → p)."""
+        texto = unicodedata.normalize('NFKD', texto)
+        # Sustituir guiones largos por el estándar
+        texto = texto.replace('–', '-').replace('—', '-')
+        return ''.join(
+            c if ord(c) < 128 else c[0]  # simplificación: mantener ASCII
+            for c in texto
+        )
 
     def limpiar_expresion(self, texto):
         """Reemplaza símbolos del PDF por operadores de Python."""
@@ -43,12 +54,10 @@ class LogicInterpreter:
         paso2 = self.resolver_implicacion(paso1)
 
         print("\n=== TABLA DE VERDAD ===")
-        # Encabezado
         header = " | ".join(vars_detectadas) + " | Resultado"
         print(header)
         print("-" * len(header))
 
-        # Todas las combinaciones posibles
         for combo in itertools.product([True, False], repeat=len(vars_detectadas)):
             valores = dict(zip(vars_detectadas, combo))
             try:
@@ -64,33 +73,28 @@ class LogicInterpreter:
         print("Pegue la expresión (use ∧, ∨, ~, →, ↔ o letras comunes)")
         
         entrada = input("\nPregunta/Expresión: ")
-        
-        # Validación previa
+        entrada = self.normalizar_texto(entrada)  #  Normalización automática
+
         if not self.es_proposicion(entrada):
             print("\nLa expresión ingresada no es una proposición evaluable.")
             return
         
-        # Detectar variables automáticamente
         vars_detectadas = sorted(list(set(re.findall(r'\b[a-z]\b', entrada))))
         print(f"\nSe detectaron las proposiciones: {vars_detectadas}")
 
-        # Preguntar si quiere tabla de verdad completa
         modo = input("¿Generar tabla de verdad completa? (s/n): ").lower()
         if modo == 's':
             self.tabla_verdad(entrada, vars_detectadas)
             return
 
-        # Si no, pedir valores manuales
         valores = {}
         for v in vars_detectadas:
             val = input(f"¿Cuál es el valor de v({v})? (v/f): ").lower()
             valores[v] = True if val == 'v' else False
 
-        # Racionalización
         paso1 = self.limpiar_expresion(entrada)
         paso2 = self.resolver_implicacion(paso1)
         
-        # Evaluación
         try:
             resultado = eval(paso2, {"__builtins__": None}, valores)
             print(f"\n{'='*30}")
@@ -108,5 +112,3 @@ if __name__ == "__main__":
         lab.ejecutar()
         if input("\n¿Resolver otro? (s/n): ").lower() != 's':
             break
-
-
