@@ -14,9 +14,12 @@ class LogicInterpreter:
             '=': ' == ',   # Para comparación
             'x': '*',      # Para multiplicación
         }
+        self.expresion_original = None
 
     def normalizar_texto(self, texto):
         """Convierte caracteres Unicode raros a ASCII estándar y conectivos correctos."""
+        self.expresion_original = texto  # Guardar la versión original
+
         texto = unicodedata.normalize('NFKD', texto)
 
         reemplazos = {
@@ -35,6 +38,10 @@ class LogicInterpreter:
             c if ord(c) < 128 else unicodedata.normalize('NFKD', c)[0]
             for c in texto
         )
+
+        # Sustituir corchetes por paréntesis
+        texto = texto.replace('[', '(').replace(']', ')')
+
         return texto
 
     def limpiar_expresion(self, texto):
@@ -90,7 +97,8 @@ class LogicInterpreter:
         entrada_normalizada = self.normalizar_texto(entrada)
 
         # Mostrar al usuario la versión limpia
-        print(f"\nExpresión normalizada: {entrada_normalizada}")
+        print(f"\nExpresión original: {self.expresion_original}")
+        print(f"Expresión normalizada: {entrada_normalizada}")
         confirmar = input("¿Está bien continuar con esta versión? (s/n): ").lower()
         if confirmar != 's':
             print("Expresión descartada. Intente nuevamente.")
@@ -121,8 +129,8 @@ class LogicInterpreter:
         try:
             resultado = eval(paso2, {"__builtins__": None}, valores)
             print(f"\n{'='*30}")
-            print(f"ANÁLISIS DE: {entrada}")
-            print(f"LÓGICA PYTHON: {paso2}")
+            print(f"ANÁLISIS DE (original): {self.expresion_original}")
+            print(f"VERSIÓN PYTHON: {paso2}")
             print(f"RESULTADO FINAL: {'VERDADERO (V)' if resultado else 'FALSO (F)'}")
             print(f"{'='*30}")
         except Exception as e:
