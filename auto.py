@@ -108,3 +108,5 @@ if __name__ == "__main__":
         lab.ejecutar()
         if input("\n¿Resolver otro? (s/n): ").lower() != 's':
             break
+
+
