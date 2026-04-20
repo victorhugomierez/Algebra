@@ -1,4 +1,5 @@
 import re
+import itertools
 
 class LogicInterpreter:
     def __init__(self):
@@ -36,6 +37,28 @@ class LogicInterpreter:
             return False
         return True
 
+    def tabla_verdad(self, entrada, vars_detectadas):
+        """Genera la tabla de verdad completa para la expresión."""
+        paso1 = self.limpiar_expresion(entrada)
+        paso2 = self.resolver_implicacion(paso1)
+
+        print("\n=== TABLA DE VERDAD ===")
+        # Encabezado
+        header = " | ".join(vars_detectadas) + " | Resultado"
+        print(header)
+        print("-" * len(header))
+
+        # Todas las combinaciones posibles
+        for combo in itertools.product([True, False], repeat=len(vars_detectadas)):
+            valores = dict(zip(vars_detectadas, combo))
+            try:
+                resultado = eval(paso2, {"__builtins__": None}, valores)
+                fila = " | ".join("V" if valores[v] else "F" for v in vars_detectadas)
+                fila += " | " + ("V" if resultado else "F")
+                print(fila)
+            except Exception as e:
+                print(f"Error en combinación {valores}: {e}")
+
     def ejecutar(self):
         print("--- MOTOR DE INFERENCIA LÓGICA (Unidad 1) ---")
         print("Pegue la expresión (use ∧, ∨, ~, →, ↔ o letras comunes)")
@@ -47,21 +70,27 @@ class LogicInterpreter:
             print("\nLa expresión ingresada no es una proposición evaluable.")
             return
         
-        # 1. Detectar variables automáticamente (letras minúsculas sueltas)
+        # Detectar variables automáticamente
         vars_detectadas = sorted(list(set(re.findall(r'\b[a-z]\b', entrada))))
-        
-        # 2. Carga dinámica de datos
-        valores = {}
         print(f"\nSe detectaron las proposiciones: {vars_detectadas}")
+
+        # Preguntar si quiere tabla de verdad completa
+        modo = input("¿Generar tabla de verdad completa? (s/n): ").lower()
+        if modo == 's':
+            self.tabla_verdad(entrada, vars_detectadas)
+            return
+
+        # Si no, pedir valores manuales
+        valores = {}
         for v in vars_detectadas:
             val = input(f"¿Cuál es el valor de v({v})? (v/f): ").lower()
             valores[v] = True if val == 'v' else False
 
-        # 3. Racionalización
+        # Racionalización
         paso1 = self.limpiar_expresion(entrada)
         paso2 = self.resolver_implicacion(paso1)
         
-        # 4. Evaluación
+        # Evaluación
         try:
             resultado = eval(paso2, {"__builtins__": None}, valores)
             print(f"\n{'='*30}")
