@@ -16,14 +16,26 @@ class LogicInterpreter:
         }
 
     def normalizar_texto(self, texto):
-        """Convierte caracteres Unicode raros a su forma básica (ej: 𝐩 → p)."""
+        """Convierte caracteres Unicode raros a ASCII estándar y conectivos correctos."""
         texto = unicodedata.normalize('NFKD', texto)
-        # Sustituir guiones largos por el estándar
-        texto = texto.replace('–', '-').replace('—', '-')
-        return ''.join(
-            c if ord(c) < 128 else c[0]  # simplificación: mantener ASCII
+
+        reemplazos = {
+            '˄': '∧',
+            '𝐯': '∨',
+            '𝑣': '∨',
+            'v': '∨',   # si aparece como operador
+            '–': '-',   # guion largo
+            '—': '-',   # guion em dash
+        }
+        for raro, normal in reemplazos.items():
+            texto = texto.replace(raro, normal)
+
+        # Convertir letras matemáticas a ASCII simple
+        texto = ''.join(
+            c if ord(c) < 128 else unicodedata.normalize('NFKD', c)[0]
             for c in texto
         )
+        return texto
 
     def limpiar_expresion(self, texto):
         """Reemplaza símbolos del PDF por operadores de Python."""
@@ -73,7 +85,18 @@ class LogicInterpreter:
         print("Pegue la expresión (use ∧, ∨, ~, →, ↔ o letras comunes)")
         
         entrada = input("\nPregunta/Expresión: ")
-        entrada = self.normalizar_texto(entrada)  #  Normalización automática
+
+        # Normalizar automáticamente
+        entrada_normalizada = self.normalizar_texto(entrada)
+
+        # Mostrar al usuario la versión limpia
+        print(f"\nExpresión normalizada: {entrada_normalizada}")
+        confirmar = input("¿Está bien continuar con esta versión? (s/n): ").lower()
+        if confirmar != 's':
+            print("Expresión descartada. Intente nuevamente.")
+            return
+
+        entrada = entrada_normalizada
 
         if not self.es_proposicion(entrada):
             print("\nLa expresión ingresada no es una proposición evaluable.")
